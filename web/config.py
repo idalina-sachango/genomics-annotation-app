@@ -92,9 +92,11 @@ class Config(object):
 
   # Change the ARNs below to reflect your SNS topics
   AWS_SNS_JOB_REQUEST_TOPIC = \
-    "some-arn-job-requests:idalina_job_requests"
+    "arn:aws:sqs:us-east-1:659248683008:idalina_job_requests"
   AWS_SNS_JOB_COMPLETE_TOPIC = \
     "some-arn-job-results:idalina_job_results"
+  AWS_SNS_JOB_REQUEST_URL = \
+    "https://sqs.us-east-1.amazonaws.com/659248683008/idalina_job_requests"
 
   # Change the table name to your own
   AWS_DYNAMODB_ANNOTATIONS_TABLE = "idalina_annotations"

@@ -36,52 +36,52 @@ but you can replace the code below with your own if you prefer.
 @app.route('/annotate', methods=['GET'])
 @authenticated
 def annotate():
-    # Create a session client to the S3 service
-    s3 = boto3.client('s3',
-      region_name=app.config['AWS_REGION_NAME'],
-      config=Config(signature_version='s3v4'))
-    # bucket name
-    bucket_name = app.config['AWS_S3_INPUTS_BUCKET']
-    # user id
-    user_id = session['primary_identity']
-    # Generate unique ID to be used as S3 key (name)
-    key = app.config['AWS_S3_KEY_PREFIX'] + user_id + '/' + \
-      str(uuid.uuid4()) + '~${filename}'
-    # Create the redirect URL
-    redirect_url = str(request.url) + '/job'
-    # Define policy fields/conditions
-    encryption = app.config['AWS_S3_ENCRYPTION']
-    acl = app.config['AWS_S3_ACL']
-    expiration = app.config['AWS_SIGNED_REQUEST_EXPIRATION']
-    # policy 
-    p_dict = {
-        "fields": {
-          "expiration": app.config['AWS_SIGNED_REQUEST_EXPIRATION'], 
-          "success_action_redirect": redirect_url,
-          "x-amz-server-side-encryption": encryption,
-          "acl": acl
-        },
-        "expiration": expiration,
-        "conditions": [
-          {"acl": acl},
-          {"success_action_redirect": redirect_url},
-          # ["starts-with", "$key", "idalina/"],
-          ["starts-with", "$success_action_redirect", redirect_url],
-          {"x-amz-server-side-encryption": encryption},
-        ]
-    }
-    try:
-        # generate signed POST request
-        response = s3.generate_presigned_post(
-            Bucket = bucket,
-            Key = key,
-            Fields=p_dict["fields"],
-            Conditions = p_dict["conditions"],
-            ExpiresIn = p_dict["expiration"]
-        )
-    except ClientError as e:
-      app.logger.error(f"Unable to generate presigned URL for upload: {e}")
-      return abort(500)
+  # Create a session client to the S3 service
+  s3 = boto3.client('s3',
+    region_name=app.config['AWS_REGION_NAME'],
+    config=Config(signature_version='s3v4'))
+  # bucket name
+  bucket_name = app.config['AWS_S3_INPUTS_BUCKET']
+  # user id
+  user_id = session['primary_identity']
+  # Generate unique ID to be used as S3 key (name)
+  key = app.config['AWS_S3_KEY_PREFIX'] + user_id + '/' + \
+    str(uuid.uuid4()) + '~${filename}'
+  # Create the redirect URL
+  redirect_url = str(request.url) + '/job'
+  # Define policy fields/conditions
+  encryption = app.config['AWS_S3_ENCRYPTION']
+  acl = app.config['AWS_S3_ACL']
+  expiration = app.config['AWS_SIGNED_REQUEST_EXPIRATION']
+  # policy 
+  p_dict = {
+    "fields": {
+      "expiration": app.config['AWS_SIGNED_REQUEST_EXPIRATION'], 
+      "success_action_redirect": redirect_url,
+      "x-amz-server-side-encryption": encryption,
+      "acl": acl
+    },
+    "expiration": expiration,
+    "conditions": [
+      {"acl": acl},
+      {"success_action_redirect": redirect_url},
+      # ["starts-with", "$key", "idalina/"],
+      ["starts-with", "$success_action_redirect", redirect_url],
+      {"x-amz-server-side-encryption": encryption},
+    ]
+  }
+  try:
+    # generate signed POST request
+    response = s3.generate_presigned_post(
+      Bucket = bucket,
+      Key = key,
+      Fields=p_dict["fields"],
+      Conditions = p_dict["conditions"],
+      ExpiresIn = p_dict["expiration"]
+    )
+  except ClientError as e:
+    app.logger.error(f"Unable to generate presigned URL for upload: {e}")
+    return abort(500)
   # Render the upload form which will parse/submit the presigned POST
   return render_template('annotate.html', s3_post=presigned_post)
 
@@ -97,19 +97,36 @@ homework assignments
 @app.route('/annotate/job', methods=['GET'])
 @authenticated
 def create_annotation_job_request():
-
   # Get bucket name, key, and job ID from the S3 redirect URL
   bucket_name = str(request.args.get('bucket'))
-  s3_key = str(request.args.get('key'))
-
-  # Extract the job ID from the S3 key
-
-  # Persist job to database
-  # Move your code here...
-
-  # Send message to request queue
-  # Move your code here...
-
+  key = str(request.args.get('key'))
+  # get job id from filename
+  file_name = key.split("/")[1]
+  job_id = file_name.split("~")[0]
+  # get user id
+  user_id = session['primary_identity']
+  # create a job item and persist it to the annotations database
+  now = datetime.now()
+  dt_string = now.strftime("%d%m%Y%H%M%S")
+  data = {
+    "job_id": job_id,
+    "user_id": user_id,
+    "input_file_name": file_name.split("~")[1],
+    "s3_inputs_bucket": bucket,
+    "s3_key_input_file": file_name,
+    "submit_time": int(dt_string),
+    "job_status": "PENDING"
+  }
+  try:
+    # insert dynamo db
+    put_into_dynamo(data)
+    try:
+      # publish notification to sns
+      sns_send(str(json.dumps(data)))
+    except Exception as err:
+      return jsonify({'code': 500, 'error': str(err)}), 500
+  except Exception as err:
+    return jsonify({'code': 500, 'error': str(err)}), 500
   return render_template('annotate_confirm.html', job_id=job_id)
 
 
@@ -180,6 +197,63 @@ def unsubscribe():
     role="free_user"
   )
   return redirect(url_for('profile'))
+
+### Helpers
+dynamo = boto3.resource('dynamodb', region_name = "us-east-1")
+table = dynamo.Table('idalina_annotations')
+
+def sns_send(message):
+    """
+    Send message to SNS to deliver to queue.
+    """
+    client = boto3.client('sns', region_name="us-east-1")
+    print(message)
+    response = client.publish(
+        TopicArn="arn:aws:sns:us-east-1:659248683008:idalina_job_requests",
+        Message=message,
+        Subject="test-subject"
+    )
+    print(response)
+
+def generate_unique_id():
+    """
+    generate unique id. 
+    if id exists in directory, return to top.
+    """
+    job_id = uuid.uuid4()
+    if job_id not in os.listdir("output"):
+        return job_id
+    return generate_unique_id()
+
+def put_into_dynamo(item):
+    """
+    Place data into Dynamo DB
+    """
+    response = table.put_item(Item = item)
+    print("*******************")
+    print(response)
+    print(f"Successfully wrote job ID {item['job_id']}")
+
+def get_from_dynamo_primary(search_by_value, search_by_name):
+    """
+    Retrieve data from DynamoDB using primary key
+    """
+    # only with primary key
+    response = table.get_item(Key = {search_by_name: search_by_value})
+    return response
+
+def get_from_dynamo_secondary():
+    """
+    Retrieve data from DynamoDB using secondary key
+    """
+    response = table.query(
+        IndexName = "user_id_index",
+        KeyConditionExpression = Key(search_by_name).eq(search_by_value)
+    )
+    return response["Items"]
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0', debug=True)
 
 
 """DO NOT CHANGE CODE BELOW THIS LINE
