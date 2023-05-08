@@ -36,47 +36,52 @@ but you can replace the code below with your own if you prefer.
 @app.route('/annotate', methods=['GET'])
 @authenticated
 def annotate():
-  # Create a session client to the S3 service
-  s3 = boto3.client('s3',
-    region_name=app.config['AWS_REGION_NAME'],
-    config=Config(signature_version='s3v4'))
-
-  bucket_name = app.config['AWS_S3_INPUTS_BUCKET']
-  user_id = session['primary_identity']
-
-  # Generate unique ID to be used as S3 key (name)
-  key_name = app.config['AWS_S3_KEY_PREFIX'] + user_id + '/' + \
-    str(uuid.uuid4()) + '~${filename}'
-
-  # Create the redirect URL
-  redirect_url = str(request.url) + '/job'
-
-  # Define policy fields/conditions
-  encryption = app.config['AWS_S3_ENCRYPTION']
-  acl = app.config['AWS_S3_ACL']
-  fields = {
-    "success_action_redirect": redirect_url,
-    "x-amz-server-side-encryption": encryption,
-    "acl": acl
-  }
-  conditions = [
-    ["starts-with", "$success_action_redirect", redirect_url],
-    {"x-amz-server-side-encryption": encryption},
-    {"acl": acl}
-  ]
-
-  # Generate the presigned POST call
-  try:
-    presigned_post = s3.generate_presigned_post(
-      Bucket=bucket_name, 
-      Key=key_name,
-      Fields=fields,
-      Conditions=conditions,
-      ExpiresIn=app.config['AWS_SIGNED_REQUEST_EXPIRATION'])
-  except ClientError as e:
-    app.logger.error(f"Unable to generate presigned URL for upload: {e}")
-    return abort(500)
-    
+    # Create a session client to the S3 service
+    s3 = boto3.client('s3',
+      region_name=app.config['AWS_REGION_NAME'],
+      config=Config(signature_version='s3v4'))
+    # bucket name
+    bucket_name = app.config['AWS_S3_INPUTS_BUCKET']
+    # user id
+    user_id = session['primary_identity']
+    # Generate unique ID to be used as S3 key (name)
+    key = app.config['AWS_S3_KEY_PREFIX'] + user_id + '/' + \
+      str(uuid.uuid4()) + '~${filename}'
+    # Create the redirect URL
+    redirect_url = str(request.url) + '/job'
+    # Define policy fields/conditions
+    encryption = app.config['AWS_S3_ENCRYPTION']
+    acl = app.config['AWS_S3_ACL']
+    expiration = app.config['AWS_SIGNED_REQUEST_EXPIRATION']
+    # policy 
+    p_dict = {
+        "fields": {
+          "expiration": app.config['AWS_SIGNED_REQUEST_EXPIRATION'], 
+          "success_action_redirect": redirect_url,
+          "x-amz-server-side-encryption": encryption,
+          "acl": acl
+        },
+        "expiration": expiration,
+        "conditions": [
+          {"acl": acl},
+          {"success_action_redirect": redirect_url},
+          # ["starts-with", "$key", "idalina/"],
+          ["starts-with", "$success_action_redirect", redirect_url],
+          {"x-amz-server-side-encryption": encryption},
+        ]
+    }
+    try:
+        # generate signed POST request
+        response = s3.generate_presigned_post(
+            Bucket = bucket,
+            Key = key,
+            Fields=p_dict["fields"],
+            Conditions = p_dict["conditions"],
+            ExpiresIn = p_dict["expiration"]
+        )
+    except ClientError as e:
+      app.logger.error(f"Unable to generate presigned URL for upload: {e}")
+      return abort(500)
   # Render the upload form which will parse/submit the presigned POST
   return render_template('annotate.html', s3_post=presigned_post)
 
