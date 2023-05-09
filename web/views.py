@@ -41,9 +41,11 @@ def annotate():
     region_name=app.config['AWS_REGION_NAME'],
     config=Config(signature_version='s3v4'))
   # bucket name
-  bucket_name = app.config['AWS_S3_INPUTS_BUCKET']
+  bucket = app.config['AWS_S3_INPUTS_BUCKET']
   # user id
   user_id = session['primary_identity']
+  print("AWS PREFIX", app.config['AWS_S3_KEY_PREFIX'])
+  print("USER ID=", user_id)
   # Generate unique ID to be used as S3 key (name)
   key = app.config['AWS_S3_KEY_PREFIX'] + user_id + '/' + \
     str(uuid.uuid4()) + '~${filename}'
@@ -56,7 +58,7 @@ def annotate():
   # policy 
   p_dict = {
     "fields": {
-      "expiration": app.config['AWS_SIGNED_REQUEST_EXPIRATION'], 
+      # "expiration": app.config['AWS_SIGNED_REQUEST_EXPIRATION'], 
       "success_action_redirect": redirect_url,
       "x-amz-server-side-encryption": encryption,
       "acl": acl
@@ -83,7 +85,7 @@ def annotate():
     app.logger.error(f"Unable to generate presigned URL for upload: {e}")
     return abort(500)
   # Render the upload form which will parse/submit the presigned POST
-  return render_template('annotate.html', s3_post=presigned_post)
+  return render_template('annotate.html', s3_post=response)
 
 
 """Fires off an annotation job
@@ -98,10 +100,11 @@ homework assignments
 @authenticated
 def create_annotation_job_request():
   # Get bucket name, key, and job ID from the S3 redirect URL
-  bucket_name = str(request.args.get('bucket'))
+  bucket = str(request.args.get('bucket'))
   key = str(request.args.get('key'))
+  print(key)
   # get job id from filename
-  file_name = key.split("/")[1]
+  file_name = key.split("/")[2]
   job_id = file_name.split("~")[0]
   # get user id
   user_id = session['primary_identity']
