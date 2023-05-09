@@ -199,8 +199,8 @@ def unsubscribe():
   return redirect(url_for('profile'))
 
 ### Helpers
-dynamo = boto3.resource('dynamodb', region_name = "us-east-1")
-table = dynamo.Table('idalina_annotations')
+dynamo = boto3.resource('dynamodb', region_name = app.config["AWS_REGION_NAME"])
+table = dynamo.Table(app.config['AWS_DYNAMODB_ANNOTATIONS_TABLE'])
 
 def sns_send(message):
     """
@@ -252,8 +252,8 @@ def get_from_dynamo_secondary():
     )
     return response["Items"]
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)
+# if __name__ == "__main__":
+#     app.run(host='0.0.0.0', debug=True)
 
 
 """DO NOT CHANGE CODE BELOW THIS LINE
