@@ -91,20 +91,36 @@ if __name__ == '__main__':
                     ':k': file_name,
                     ':j': result_file_name},
                 ReturnValues="UPDATED_NEW")
+
+            completion_message = "Result and log file uploaded to S3 and database updated."
+            sns_send_results(completion_message)
     else:
         print("A valid .vcf file must be provided as input to this program.")
 
 
-def sns_send(message):
+def sns_send_requests(message):
     """
     Send message to SNS to deliver to queue.
     """
-    client = boto3.client('sns', region_name="us-east-1")
+    client = boto3.client('sns', region_name=app.config["AWS_REGION_NAME"])
     print(message)
     response = client.publish(
         TopicArn="arn:aws:sns:us-east-1:659248683008:idalina_job_requests",
         Message=message,
-        Subject="test-subject"
+        Subject="request"
+    )
+    print(response)
+
+def sns_send_results(message):
+    """
+    Send message to SNS to deliver to queue.
+    """
+    client = boto3.client('sns', region_name=app.config["AWS_REGION_NAME"])
+    print(message)
+    response = client.publish(
+        TopicArn="arn:aws:sns:us-east-1:659248683008:idalina_job_results",
+        Message=message,
+        Subject="result"
     )
     print(response)
 
