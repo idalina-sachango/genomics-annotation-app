@@ -102,7 +102,6 @@ def create_annotation_job_request():
   # Get bucket name, key, and job ID from the S3 redirect URL
   bucket = str(request.args.get('bucket'))
   key = str(request.args.get('key'))
-  print(key)
   # get job id from filename
   file_name = key.split("/")[2]
   job_id = file_name.split("~")[0]
@@ -254,9 +253,6 @@ def get_from_dynamo_secondary():
         KeyConditionExpression = Key(search_by_name).eq(search_by_value)
     )
     return response["Items"]
-
-# if __name__ == "__main__":
-#     app.run(host='0.0.0.0', debug=True)
 
 
 """DO NOT CHANGE CODE BELOW THIS LINE

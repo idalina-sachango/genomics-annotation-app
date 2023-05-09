@@ -20,19 +20,27 @@ from boto3.dynamodb.conditions import Key
 from botocore.client import Config
 from botocore.exceptions import ClientError
 
-from flask import (abort, flash, redirect, render_template,
-  request, session, url_for)
+# from flask import (abort, flash, redirect, render_template,
+#   request, session, url_for)
 
-from gas import app, db
-from decorators import authenticated, is_premium
-from auth import get_profile, update_profile
+# from gas import app, db
+# from decorators import authenticated, is_premium
+# from auth import get_profile, update_profile
+# Get configuration
+from configparser import SafeConfigParser
+config = SafeConfigParser(os.environ)
+config.read('ann_config.ini')
 # # adding anntools to the system path
 # sys.path.insert(0, '/home/ec2-user/mpcs-cc/anntools')
 # import driver
 
-dynamo = boto3.resource('dynamodb', region_name = app.config["AWS_REGION_NAME"])
-table = dynamo.Table(app.config['AWS_DYNAMODB_ANNOTATIONS_TABLE'])
-results_bucket = app.config["AWS_S3_RESULTS_BUCKET"]
+region_name = config["aws"]["AwsRegionName"]
+db_table_name = config["dynamodb"]["TableName"]
+results_bucket = config["s3"]["ResultsBucket"]
+
+dynamo = boto3.resource('dynamodb', region_name = region_name)
+table = dynamo.Table(db_table_name)
+
 
 """A rudimentary timer for coarse-grained profiling
 """
@@ -92,7 +100,10 @@ if __name__ == '__main__':
                     ':j': result_file_name},
                 ReturnValues="UPDATED_NEW")
 
-            completion_message = {"message": "Result and log file uploaded to S3 and database updated."}
+            completion_message = {
+                "email": session['email'],
+                "message": "Result and log file uploaded to S3 and database updated."
+            }
             sns_send_results(str(json.dumps(completion_message)))
     else:
         print("A valid .vcf file must be provided as input to this program.")

@@ -9,22 +9,35 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.client import Config
 from botocore.exceptions import ClientError
+from configparser import SafeConfigParser
 
-from flask import (abort, flash, redirect, render_template,
-  request, session, url_for)
+config = SafeConfigParser(os.environ)
+config.read('ann_config.ini')
 
-from gas import app, db
-from decorators import authenticated, is_premium
-from auth import get_profile, update_profile
+# from flask import (abort, flash, redirect, render_template,
+#   request, session, url_for)
 
-dynamo = boto3.resource('dynamodb', region_name = app.config['AWS_REGION_NAME'])
-table = dynamo.Table(app.config['AWS_DYNAMODB_ANNOTATIONS_TABLE'])
+# from gas import app, db
+# from decorators import authenticated, is_premium
+# from auth import get_profile, update_profile
+
+
+region_name = config["aws"]["AwsRegionName"]
+db_table_name = config["dynamodb"]["TableName"]
+inputs_bucket = config["s3"]["InputsBucket"]
+results_bucket = config["s3"]["ResultsBucket"]
+request_topic = config["aws"]["RequestTopic"]
+request_URL = config["aws"]["RequestURL"]
+prefixs3 = config["s3"]["PrefixS3"]
+
+dynamo = boto3.resource('dynamodb', region_name = region_name)
+table = dynamo.Table(db_table_name)
 
 if "output" not in os.listdir("./"):
     os.mkdir("./output")
 
-url = app.config['AWS_SNS_JOB_REQUEST_URL']
-queue = boto3.resource("sqs", region_name=app.config['AWS_REGION_NAME']).Queue(url)
+url = request_URL
+queue = boto3.resource("sqs", region_name=region_name).Queue(url)
 
 while True:
     messages = queue.receive_messages(WaitTimeSeconds=10)
@@ -33,14 +46,15 @@ while True:
             s3 = boto3.client('s3')
             body = json.loads(message.body)
             messge = json.loads(body["Message"])
+            print(messge)
             # extract job id
             job_id = messge["job_id"]
             # extract user id
-            user_id = session['primary_identity']
+            user_id = messge['user_id']
             # extract file name
             file_param = messge["s3_key_input_file"]
             # extract prefix
-            prefix = app.config['AWS_S3_KEY_PREFIX'] + user_id
+            prefix = prefixs3 + user_id
             # set pucket full file path
             bucket_file_path = f"{prefix}/{file_param}"
             file_name = messge["input_file_name"]
@@ -49,7 +63,7 @@ while True:
             if job_id not in os.listdir("output"):
                 os.makedirs(f"output/{job_id}")
             s3.download_file(
-                app.config['AWS_S3_INPUTS_BUCKET'],
+                inputs_bucket,
                 bucket_file_path,
                 f"output/{job_id}/{file_param}"
             )
@@ -58,7 +72,7 @@ while True:
             try:
                 # update dynamoDB job status to running
                 response = table.update_item(
-                    TableName=app.config["AWS_DYNAMODB_ANNOTATIONS_TABLE"],
+                    TableName=db_table_name,
                     Key={'job_id': job_id},
                     UpdateExpression='set job_status = :r',
                     ConditionExpression='job_status = :p',
