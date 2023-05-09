@@ -92,8 +92,8 @@ if __name__ == '__main__':
                     ':j': result_file_name},
                 ReturnValues="UPDATED_NEW")
 
-            completion_message = "Result and log file uploaded to S3 and database updated."
-            sns_send_results(completion_message)
+            completion_message = {"message": "Result and log file uploaded to S3 and database updated."}
+            sns_send_results(str(json.dumps(completion_message)))
     else:
         print("A valid .vcf file must be provided as input to this program.")
 
