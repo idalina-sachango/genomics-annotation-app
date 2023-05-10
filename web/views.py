@@ -44,8 +44,6 @@ def annotate():
   bucket = app.config['AWS_S3_INPUTS_BUCKET']
   # user id
   user_id = session['primary_identity']
-  print("AWS PREFIX", app.config['AWS_S3_KEY_PREFIX'])
-  print("USER ID=", user_id)
   # Generate unique ID to be used as S3 key (name)
   key = app.config['AWS_S3_KEY_PREFIX'] + user_id + '/' + \
     str(uuid.uuid4()) + '~${filename}'
@@ -105,8 +103,10 @@ def create_annotation_job_request():
   # get job id from filename
   file_name = key.split("/")[2]
   job_id = file_name.split("~")[0]
-  # get user id
+  # get user id and email
   user_id = session['primary_identity']
+  print("Email in VIEWS=", session['email'])
+  user_email = session['email']
   # create a job item and persist it to the annotations database
   now = datetime.now()
   dt_string = now.strftime("%d%m%Y%H%M%S")
