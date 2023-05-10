@@ -114,7 +114,6 @@ while True:
             job_id = messge["job_id"]
             # extract user id
             user_id = messge['user_id']
-            print(get_user_profile(user_id, "idalina_accounts"))
             email = [x for x in get_user_profile(user_id, "idalina_accounts") if "@uchicago.edu" in str(x)]
             # extract file name
             file_param = messge["s3_key_input_file"]
@@ -125,12 +124,15 @@ while True:
             file_name = messge["input_file_name"]
 
             # write output to jobs own directory
-            if job_id not in os.listdir("output"):
-                os.makedirs(f"output/{job_id}")
+            if user_id not in os.listdir("output"):
+                os.makedirs(f"output/{user_id}")
+            if job_id not in os.listdir(f"output/{user_id}"):
+                os.makedirs(f"output/{user_id}/{job_id}")
+  
             s3.download_file(
                 inputs_bucket,
                 bucket_file_path,
-                f"output/{job_id}/{file_param}"
+                f"output/{user_id}/{job_id}/{file_param}"
             )
 
             # write to dynamodb and spawn annotator process
@@ -149,7 +151,7 @@ while True:
                 )
                 try:
                     # spawn a subprocess using Popen
-                    subprocess.Popen(["python", "./run.py", f"output/{job_id}/{file_param}"])
+                    subprocess.Popen(["python", "./run.py", f"output/{user_id}/{job_id}/{file_param}"])
                     completion_message = {
                         "email": email[0],
                         "message": "Result and log file uploaded to S3 and database updated."
