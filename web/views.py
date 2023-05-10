@@ -202,7 +202,7 @@ def annotation_log(id):
   )
   
   job = response["Items"][0]
-  print("JOB", job)
+
   user_id = session["primary_identity"]
 
   response = "The annotation job is still running"
@@ -217,8 +217,6 @@ def annotation_log(id):
         }
       )
       response = requests.get(url).text
-      print(response)
-
     except ClientError as e:
       logging.error(e)
   return render_template('view_log.html', log_file_contents=response, job_id=id)
