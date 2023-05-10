@@ -146,7 +146,6 @@ def annotations_list():
   )
   list_of_jobs = response["Items"]
   for d in list_of_jobs:
-    print(d)
     dt_time_format = "%d%m%Y%H%M%S"
     date_obj = datetime.strptime(str(d["submit_time"]), dt_time_format)
     d["submit_time"] = str(date_obj)
