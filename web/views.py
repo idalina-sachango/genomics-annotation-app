@@ -216,7 +216,8 @@ def annotation_log(id):
           'Key': app.config['AWS_S3_KEY_PREFIX'] + user_id + "/" + job["s3_key_log_file"]
         }
       )
-      response = requests.get(url).content
+      response = requests.get(url).text
+      print(response)
 
     except ClientError as e:
       logging.error(e)
