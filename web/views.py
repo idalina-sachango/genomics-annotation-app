@@ -140,7 +140,12 @@ def annotations_list():
   # Get list of annotations to display
   #Make Initial Query
   user_id = session['primary_identity']
-  response = table.query(KeyConditionExpression=Key('user_id').eq(user_id))
+  response = table.query(
+    IndexName="user_id_index",
+    KeyConditionExpression=Key("user_id").eq(user_id)
+  )
+
+    
   print(response)
   
   return render_template('annotations.html', annotations=None)
