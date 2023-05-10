@@ -97,7 +97,7 @@ if __name__ == '__main__':
                 ExpressionAttributeValues={
                     ':r': "COMPLETED",
                     ':p': int(dt_string), # save it in UTC
-                    ':k': file_name,
+                    ':k': f"{file_name}.count.log",
                     ':j': result_file_name},
                 ReturnValues="UPDATED_NEW")
     else:
