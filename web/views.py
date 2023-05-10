@@ -157,8 +157,13 @@ def annotation_details(id):
   response = table.query(
     KeyConditionExpression=Key("job_id").eq(id)
   )
+  
   job = response["Items"][0]
-  print(job)
+  # reformat date into human readable format
+  dt_time_format = "%d%m%Y%H%M%S"
+  date_obj = datetime.strptime(str(job["completion_time"]), dt_time_format)
+  job["completion_time"] = str(date_obj)
+
   return render_template('annotation_details.html', annotation=job)
 
 
