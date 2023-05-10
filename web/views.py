@@ -144,11 +144,8 @@ def annotations_list():
     IndexName="user_id_index",
     KeyConditionExpression=Key("user_id").eq(user_id)
   )
-
-    
-  print(response)
-  
-  return render_template('annotations.html', annotations=None)
+  list_of_jobs = response["Items"]
+  return render_template('annotations.html', annotations=list_of_jobs)
 
 
 """Display details of a specific annotation job
