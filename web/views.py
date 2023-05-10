@@ -150,14 +150,15 @@ def annotations_list():
 
 """Display details of a specific annotation job
 """
-@app.route('/annotations/<job_id>', methods=['GET'])
+@app.route('/annotations/<id>', methods=['GET'])
 @authenticated
-def annotation_details(job_id):
+def annotation_details(id):
   #Make Initial Query
   response = table.query(
-    KeyConditionExpression=Key("job_id").eq(job_id)
+    KeyConditionExpression=Key("job_id").eq(id)
   )
   job = response["Items"][0]
+  print(job)
   return render_template('annotation_details.html', annotation=job)
 
 
