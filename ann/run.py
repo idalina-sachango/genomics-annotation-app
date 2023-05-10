@@ -60,19 +60,21 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         with Timer():
             # run the annotator
+            print("FILE", sys.argv[1])
             driver.run(sys.argv[1], "vcf")
             # create job unique id
-            job_id = sys.argv[1].split("/")[1]
+            
+            job_id = sys.argv[1].split("/")[2]
             # extract user id
             user_id = sys.argv[1].split("/")[1]
             # grab file name without full path
-            file_name = sys.argv[1].split("/")[2]
+            file_name = sys.argv[1].split("/")[3]
             # grab annotator log file with and without job id
-            log_file = f"output/{job_id}/{file_name}.count.log"
+            log_file = f"output/{user_id}/{job_id}/{file_name}.count.log"
             # grab annotator result file with and without job id
             file_name_wo_vcf = file_name.split(".vcf")[0]
             result_file_name = f"{file_name_wo_vcf}.annot.vcf"
-            result_file_path = f"output/{job_id}/{result_file_name}"
+            result_file_path = f"output/{user_id}/{job_id}/{result_file_name}"
             # Upload the log and result file
             s3 = boto3.client('s3')
             # extract prefix

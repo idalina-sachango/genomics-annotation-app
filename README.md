@@ -10,3 +10,5 @@ Directory contents are as follows:
 
 Changes 
 * `annotatation_details.html` `{{ annotation['complete_time'] }}` got changed to `{{ annotation['completion_time'] }}`
+
+* Changed file path of output to `user/job_id/file_name`. This is still a tentative edit. 
