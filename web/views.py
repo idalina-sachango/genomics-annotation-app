@@ -145,6 +145,11 @@ def annotations_list():
     KeyConditionExpression=Key("user_id").eq(user_id)
   )
   list_of_jobs = response["Items"]
+  for d in list_of_jobs:
+    print(d)
+    dt_time_format = "%d%m%Y%H%M%S"
+    date_obj = datetime.strptime(str(d["submit_time"]), dt_time_format)
+    d["submit_time"] = str(date_obj)
   return render_template('annotations.html', annotations=list_of_jobs)
 
 
