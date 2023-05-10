@@ -47,6 +47,7 @@ def annotate():
   # Generate unique ID to be used as S3 key (name)
   key = app.config['AWS_S3_KEY_PREFIX'] + user_id + '/' + \
     str(uuid.uuid4()) + '~${filename}'
+  print("KEy!!!!!",key)
   # Create the redirect URL
   redirect_url = str(request.url) + '/job'
   # Define policy fields/conditions
@@ -105,7 +106,6 @@ def create_annotation_job_request():
   job_id = file_name.split("~")[0]
   # get user id and email
   user_id = session['primary_identity']
-  print("Email in VIEWS=", session['email'])
   user_email = session['email']
   # create a job item and persist it to the annotations database
   now = datetime.now()
@@ -157,17 +157,35 @@ def annotations_list():
 @app.route('/annotations/<id>', methods=['GET'])
 @authenticated
 def annotation_details(id):
+  s3 = boto3.client('s3')
   #Make Initial Query
   response = table.query(
     KeyConditionExpression=Key("job_id").eq(id)
   )
   
   job = response["Items"][0]
+  user_id = session["primary_identity"]
   # reformat date into human readable format
   dt_time_format = "%d%m%Y%H%M%S"
-  date_obj = datetime.strptime(str(job["completion_time"]), dt_time_format)
-  job["completion_time"] = str(date_obj)
 
+  start_date_obj = datetime.strptime(str(job["submit_time"]), dt_time_format)
+  job["submit_time"] = str(start_date_obj)
+
+  if "completion_time" in job.keys():
+    end_date_obj = datetime.strptime(str(job["completion_time"]), dt_time_format)
+    job["completion_time"] = str(end_date_obj)
+    # generate signed POST request
+    try:
+      url = s3.generate_presigned_url(
+        'get_object',
+        Params={
+          'Bucket': app.config["AWS_S3_RESULTS_BUCKET"],
+          'Key': app.config['AWS_S3_KEY_PREFIX'] + user_id + "/" + job["s3_key_result_file"]
+        }
+      )
+      job["result_file_url"] = url
+    except ClientError as e:
+      logging.error(e)
   return render_template('annotation_details.html', annotation=job)
 
 
