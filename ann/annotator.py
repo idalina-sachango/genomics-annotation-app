@@ -114,6 +114,7 @@ while True:
             job_id = messge["job_id"]
             # extract user id
             user_id = messge['user_id']
+            print(get_user_profile(user_id, "idalina_accounts"))
             email = [x for x in get_user_profile(user_id, "idalina_accounts") if "@uchicago.edu" in str(x)]
             # extract file name
             file_param = messge["s3_key_input_file"]
