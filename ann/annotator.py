@@ -38,7 +38,6 @@ def sns_send_requests(message):
     Send message to SNS to deliver to queue.
     """
     client = boto3.client('sns', region_name=region_name)
-    print(message)
     response = client.publish(
         TopicArn="arn:aws:sns:us-east-1:659248683008:idalina_job_requests",
         Message=message,
@@ -51,7 +50,6 @@ def sns_send_results(message):
     Send message to SNS to deliver to queue.
     """
     client = boto3.client('sns', region_name=region_name)
-    print(message)
     response = client.publish(
         TopicArn="arn:aws:sns:us-east-1:659248683008:idalina_job_results",
         Message=message,
