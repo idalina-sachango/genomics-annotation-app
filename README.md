@@ -6,3 +6,7 @@ Directory contents are as follows:
 * `/ann` - Annotator files
 * `/util` - Utility scripts for notifications, archival, and restoration
 * `/aws` - AWS user data files
+
+
+Changes 
+* `annotatation_details.html` `{{ annotation['complete_time'] }}` got changed to `{{ annotation['completion_time'] }}`

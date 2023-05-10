@@ -19,7 +19,7 @@ University of Chicago
       <strong>VCF Input File</strong>: <a href="{{ annotation['input_file_url'] }}">{{ annotation['input_file_name'] }}</a><br />
       <strong>Status</strong>: {{ annotation['job_status'] }}
       {% if annotation['job_status'] == "COMPLETED" %}
-      <br /><strong>Complete Time</strong>: {{ annotation['complete_time'] }}
+      <br /><strong>Complete Time</strong>: {{ annotation['completion_time'] }}
       <hr />
       <strong>Annotated Results File</strong>: 
       {% if free_access_expired %}

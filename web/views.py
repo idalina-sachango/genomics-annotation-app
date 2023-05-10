@@ -140,10 +140,17 @@ def annotations_list():
   # Get list of annotations to display
   #Make Initial Query
   user_id = session['primary_identity']
-  response = table.query(KeyConditionExpression=Key('user_id').eq(user_id))
-  print(response)
-  
-  return render_template('annotations.html', annotations=None)
+  response = table.query(
+    IndexName="user_id_index",
+    KeyConditionExpression=Key("user_id").eq(user_id)
+  )
+  list_of_jobs = response["Items"]
+  for d in list_of_jobs:
+    print(d)
+    dt_time_format = "%d%m%Y%H%M%S"
+    date_obj = datetime.strptime(str(d["submit_time"]), dt_time_format)
+    d["submit_time"] = str(date_obj)
+  return render_template('annotations.html', annotations=list_of_jobs)
 
 
 """Display details of a specific annotation job
@@ -151,7 +158,18 @@ def annotations_list():
 @app.route('/annotations/<id>', methods=['GET'])
 @authenticated
 def annotation_details(id):
-  pass
+  #Make Initial Query
+  response = table.query(
+    KeyConditionExpression=Key("job_id").eq(id)
+  )
+  
+  job = response["Items"][0]
+  # reformat date into human readable format
+  dt_time_format = "%d%m%Y%H%M%S"
+  date_obj = datetime.strptime(str(job["completion_time"]), dt_time_format)
+  job["completion_time"] = str(date_obj)
+
+  return render_template('annotation_details.html', annotation=job)
 
 
 """Display the log file contents for an annotation job
