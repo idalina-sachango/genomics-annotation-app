@@ -1,7 +1,9 @@
 import time
 import json
 import sys
-from run_helpers import (
+# adding util to the system path
+sys.path.insert(0, '/home/ec2-user/mpcs-cc/gas/util')
+from sns_helpers import (
     sns_send_archive
 )
 

@@ -242,6 +242,7 @@ def subscribe():
       identity_id=session['primary_identity'],
       role="premium_user"
     )
+    print("IN POST")
 
     # Update role in the session
     session['role'] = "premium_user"
@@ -249,6 +250,19 @@ def subscribe():
     # Request restoration of the user's data from Glacier
     # Add code here to initiate restoration of archived user data
     # Make sure you handle files not yet archived!
+
+    s3 = boto3.client('s3')
+    user_id = session["primary_identity"]
+    #query dynamo db
+    response = table.query(
+      IndexName="user_id_index",
+      KeyConditionExpression=Key("user_id").eq(user_id)
+    )
+  
+    job_list = response["Items"]
+    print(job)
+
+    # send job list to message queue
 
     # Display confirmation page
     return render_template('subscribe_confirm.html') 
