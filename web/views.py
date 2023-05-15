@@ -11,6 +11,7 @@ __author__ = 'Vas Vasiliadis <vas@uchicago.edu>'
 import uuid
 import time
 import json
+import requests
 from datetime import datetime
 
 import boto3
@@ -194,7 +195,31 @@ def annotation_details(id):
 @app.route('/annotations/<id>/log', methods=['GET'])
 @authenticated
 def annotation_log(id):
-  pass
+  s3 = boto3.client('s3')
+  #Make Initial Query
+  response = table.query(
+    KeyConditionExpression=Key("job_id").eq(id)
+  )
+  
+  job = response["Items"][0]
+
+  user_id = session["primary_identity"]
+
+  response = "The annotation job is still running"
+  if "completion_time" in job.keys():
+    # generate signed POST request
+    try:
+      url = s3.generate_presigned_url(
+        'get_object',
+        Params={
+          'Bucket': app.config["AWS_S3_RESULTS_BUCKET"],
+          'Key': app.config['AWS_S3_KEY_PREFIX'] + user_id + "/" + job["s3_key_log_file"]
+        }
+      )
+      response = requests.get(url).text
+    except ClientError as e:
+      logging.error(e)
+  return render_template('view_log.html', log_file_contents=response, job_id=id)
 
 
 """Subscription management handler
