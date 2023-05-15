@@ -18,11 +18,6 @@ import sys
 import boto3
 import time
 import shutil
-from run_helpers import (
-    sns_send_requests,
-    sns_send_results,
-    sns_send_archive
-)
 from datetime import datetime
 from boto3.dynamodb.conditions import Key
 from botocore.client import Config
