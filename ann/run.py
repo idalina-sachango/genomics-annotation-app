@@ -17,6 +17,10 @@ import uuid
 import sys
 import boto3
 import time
+from run_helpers import (
+    sns_send_requests,
+    sns_send_results
+)
 from datetime import datetime
 from boto3.dynamodb.conditions import Key
 from botocore.client import Config
@@ -27,13 +31,17 @@ config.read('ann_config.ini')
 # adding anntools to the system path
 sys.path.insert(0, '/home/ec2-user/mpcs-cc/anntools')
 import driver
+# adding util to the system path
+sys.path.insert(0, '/home/ec2-user/mpcs-cc/gas/util')
+from helpers import get_user_profile, send_email_ses
 
 ## Code
 region_name = config["aws"]["AwsRegionName"]
 db_table_name = config["dynamodb"]["TableName"]
 inputs_bucket = config["s3"]["InputsBucket"]
 results_bucket = config["s3"]["ResultsBucket"]
-request_topic = config["aws"]["RequestTopic"]
+requests_topic = config["aws"]["RequestTopic"]
+results_topic = config["aws"]["ResultsTopic"]
 request_URL = config["aws"]["RequestURL"]
 prefixs3 = config["s3"]["PrefixS3"]
 
@@ -60,7 +68,6 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         with Timer():
             # run the annotator
-            print("FILE", sys.argv[1])
             driver.run(sys.argv[1], "vcf")
             # create job unique id
             
@@ -93,76 +100,19 @@ if __name__ == '__main__':
             dt_string = now.strftime("%d%m%Y%H%M%S")
             r2 = table.update_item(
                 Key={'job_id': str(job_id)},
-                UpdateExpression="set job_status=:r, completion_time=:p, s3_key_log_file=:k, s3_key_result_file=:j",
+                UpdateExpression="set job_status=:r, completion_time=:p, \
+                s3_key_log_file=:k, s3_key_result_file=:j",
                 ExpressionAttributeValues={
                     ':r': "COMPLETED",
                     ':p': int(dt_string), # save it in UTC
                     ':k': f"{file_name}.count.log",
                     ':j': result_file_name},
                 ReturnValues="UPDATED_NEW")
+            email = [x for x in get_user_profile(user_id, "idalina_accounts") if "@uchicago.edu" in str(x)]
+            completion_message = {
+                "email": email[0],
+                "message": "Result and log file uploaded to S3 and database updated."
+            }
+            sns_send_results(str(json.dumps(completion_message)))
     else:
         print("A valid .vcf file must be provided as input to this program.")
-
-
-def sns_send_requests(message):
-    """
-    Send message to SNS to deliver to queue.
-    """
-    client = boto3.client('sns', region_name=app.config["AWS_REGION_NAME"])
-    print(message)
-    response = client.publish(
-        TopicArn="arn:aws:sns:us-east-1:659248683008:idalina_job_requests",
-        Message=message,
-        Subject="request"
-    )
-    print(response)
-
-def sns_send_results(message):
-    """
-    Send message to SNS to deliver to queue.
-    """
-    client = boto3.client('sns', region_name=app.config["AWS_REGION_NAME"])
-    print(message)
-    response = client.publish(
-        TopicArn="arn:aws:sns:us-east-1:659248683008:idalina_job_results",
-        Message=message,
-        Subject="result"
-    )
-    print(response)
-
-def generate_unique_id():
-    """
-    generate unique id. 
-    if id exists in directory, return to top.
-    """
-    job_id = uuid.uuid4()
-    if job_id not in os.listdir("output"):
-        return job_id
-    return generate_unique_id()
-
-def put_into_dynamo(item):
-    """
-    Place data into Dynamo DB
-    """
-    response = table.put_item(Item = item)
-    print("*******************")
-    print(response)
-    print(f"Successfully wrote job ID {item['job_id']}")
-
-def get_from_dynamo_primary(search_by_value, search_by_name):
-    """
-    Retrieve data from DynamoDB using primary key
-    """
-    # only with primary key
-    response = table.get_item(Key = {search_by_name: search_by_value})
-    return response
-
-def get_from_dynamo_secondary():
-    """
-    Retrieve data from DynamoDB using secondary key
-    """
-    response = table.query(
-        IndexName = "user_id_index",
-        KeyConditionExpression = Key(search_by_name).eq(search_by_value)
-    )
-    return response["Items"]
