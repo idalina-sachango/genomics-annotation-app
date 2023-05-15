@@ -55,7 +55,7 @@ while True:
                         jobParameters={
                             "Tier": "Expedited",
                             "Type": "archive-retrieval",
-                            "ArchiveId": job["results_file_archive_id"]
+                            "ArchiveId": str(job["results_file_archive_id"])
                         },
                     )
 

@@ -73,9 +73,10 @@ while True:
                             vaultName=config["glacier"]["VaultName"],
                             body=seekable_file
                         )
-                        print("Glacier upload response",response)
+                        print("Glacier upload response", response)
 
                     archive_id = response["archiveId"]
+
                     response_db = table.update_item(
                         TableName=dynamo_name,
                         Key={'job_id': job_id},
