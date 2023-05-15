@@ -8,7 +8,7 @@ from run_helpers import (
 user_id = sys.argv[1]
 job_id = sys.argv[2]
 
-time.sleep(15)
+time.sleep(300)
 print(f"5 minutes are up. Deleting job : {job_id}")
 
 arch = {
