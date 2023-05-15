@@ -12,3 +12,7 @@ Changes
 * `annotatation_details.html` `{{ annotation['complete_time'] }}` got changed to `{{ annotation['completion_time'] }}`
 
 * Changed file path of output to `user/job_id/file_name`. This is still a tentative edit. 
+
+Archiving
+
+* I archive free users files after 5 minutes by using `subporcess.Popen()` with a python file `wait.py`. This script sleeps for 5 minutes. After it is done sleeping, it sends a delete message to my archive queue. The util instance is listening for delete messages from my archive queue and begins the process of deleting result files from s3 once its received a message. 
