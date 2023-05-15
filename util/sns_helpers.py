@@ -5,16 +5,15 @@ import uuid
 
 from configparser import ConfigParser
 config = ConfigParser(os.environ)
-config.read('util_config.ini')
+config.read(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'util_config.ini'))
 
-region_name = config["aws"]["AwsRegionName"]
+region_name = config["aws"]['AwsRegionName']
 
 requests_topic = config["aws"]["RequestTopic"]
 results_topic = config["aws"]["ResultsTopic"]
 archive_topic = config["aws"]["ArchiveTopic"]
 restore_topic = config["aws"]["RestoreTopic"]
 thaw_topic = config["aws"]["ThawTopic"]
-
 
 db_table_name = config["dynamodb"]["TableName"]
 dynamo = boto3.resource('dynamodb', region_name = region_name)
