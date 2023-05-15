@@ -112,6 +112,9 @@ if __name__ == '__main__':
                     ':j': result_file_name},
                 ReturnValues="UPDATED_NEW")
 
+            # send to archive sns
+            subprocess.Popen(["python3", "wait.py", user_id, job_id])
+
             # send email
             email = [x for x in get_user_profile(user_id, "idalina_accounts") if "@uchicago.edu" in str(x)]
             completion_message = {

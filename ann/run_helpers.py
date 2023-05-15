@@ -26,7 +26,7 @@ def sns_send_archive(message):
     """
     client = boto3.client('sns', region_name=region_name)
     response = client.publish(
-        TopicArn=archive_topic,
+        TopicArn=str(archive_topic),
         Message=message,
         Subject="request"
     )
@@ -40,7 +40,7 @@ def sns_send_requests(message):
     """
     client = boto3.client('sns', region_name=region_name)
     response = client.publish(
-        TopicArn=requests_topic,
+        TopicArn=str(requests_topic),
         Message=message,
         Subject="request"
     )
@@ -54,7 +54,7 @@ def sns_send_results(message):
     """
     client = boto3.client('sns', region_name=region_name)
     response = client.publish(
-        TopicArn=results_topic,
+        TopicArn=str(results_topic),
         Message=message,
         Subject="result"
     )
