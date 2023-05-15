@@ -17,6 +17,7 @@ import uuid
 import sys
 import boto3
 import time
+import shutil
 from run_helpers import (
     sns_send_requests,
     sns_send_results,
@@ -92,7 +93,7 @@ if __name__ == '__main__':
             with open(result_file_path, "rb") as f:
                 s3.upload_fileobj(f, results_bucket, f"{prefix}/{result_file_name}")
 
-            os.rmdir("output")
+            shutil.rmtree("output")
 
             # add the name of the S3 key for the results file
             # Adds the name of the S3 key for the log file
