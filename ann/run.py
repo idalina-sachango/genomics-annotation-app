@@ -17,9 +17,11 @@ import uuid
 import sys
 import boto3
 import time
+import shutil
 from run_helpers import (
     sns_send_requests,
-    sns_send_results
+    sns_send_results,
+    sns_send_archive
 )
 from datetime import datetime
 from boto3.dynamodb.conditions import Key
@@ -70,7 +72,6 @@ if __name__ == '__main__':
             # run the annotator
             driver.run(sys.argv[1], "vcf")
             # create job unique id
-            
             job_id = sys.argv[1].split("/")[2]
             # extract user id
             user_id = sys.argv[1].split("/")[1]
@@ -92,6 +93,8 @@ if __name__ == '__main__':
             with open(result_file_path, "rb") as f:
                 s3.upload_fileobj(f, results_bucket, f"{prefix}/{result_file_name}")
 
+            shutil.rmtree("output")
+
             # add the name of the S3 key for the results file
             # Adds the name of the S3 key for the log file
             # Adds the completion time (use the current system time)
@@ -108,6 +111,8 @@ if __name__ == '__main__':
                     ':k': f"{file_name}.count.log",
                     ':j': result_file_name},
                 ReturnValues="UPDATED_NEW")
+
+            # send email
             email = [x for x in get_user_profile(user_id, "idalina_accounts") if "@uchicago.edu" in str(x)]
             completion_message = {
                 "email": email[0],

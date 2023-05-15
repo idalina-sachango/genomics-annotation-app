@@ -12,6 +12,7 @@ config.read('ann_config.ini')
 
 requests_topic = config["aws"]["RequestTopic"]
 results_topic = config["aws"]["ResultsTopic"]
+archive_topic = config["aws"]["ArchiveTopic"]
 region_name = config["aws"]["AwsRegionName"]
 db_table_name = config["dynamodb"]["TableName"]
 
@@ -25,7 +26,7 @@ def sns_send_archive(message):
     """
     client = boto3.client('sns', region_name=region_name)
     response = client.publish(
-        TopicArn=requests_topic,
+        TopicArn=archive_topic,
         Message=message,
         Subject="request"
     )

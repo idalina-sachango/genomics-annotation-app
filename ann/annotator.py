@@ -59,10 +59,7 @@ while True:
             file_name = messge["input_file_name"]
 
             # write output to jobs own directory
-            if user_id not in os.listdir("output"):
-                os.makedirs(f"output/{user_id}")
-            if job_id not in os.listdir(f"output/{user_id}"):
-                os.makedirs(f"output/{user_id}/{job_id}")
+            os.makedirs(f"output/{user_id}/{job_id}")
   
             s3.download_file(
                 inputs_bucket,
