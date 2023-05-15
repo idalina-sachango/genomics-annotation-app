@@ -2,10 +2,8 @@
 #
 # NOTE: This file lives on the Utils instance
 #
-# Copyright (C) 2011-2019 Vas Vasiliadis
-# University of Chicago
 ##
-__author__ = 'Vas Vasiliadis <vas@uchicago.edu>'
+__author__ = 'Idalina Sachango'
 
 import os
 import sys
@@ -32,17 +30,14 @@ dynamo = boto3.resource('dynamodb', region_name = region_name)
 table = dynamo.Table(dynamo_name)
 
 # Add utility code here
-if "output" not in os.listdir("./"):
-    os.mkdir("./output")
-
 url = config["aws"]["ArchiveURL"]
 queue = boto3.resource("sqs", region_name=region_name).Queue(url)
 
 while True:
-    if "output" not in os.listdir("./"):
-        os.mkdir("./output")
     messages = queue.receive_messages(WaitTimeSeconds=10)
     for message in messages:
+        if "output" not in os.listdir("./"):
+            os.mkdir("./output")
         try: 
             body = json.loads(message.body)
             # extract message
@@ -71,7 +66,7 @@ while True:
                         vaultName=config["glacier"]["VaultName"],
                         body=f"output/{file_name}"
                     )
-                    archive_id = response["ResponseMetadata"]["HTTPHeaders"]["x-amzn-requestid"]
+                    archive_id = response["archiveId"]
                     response_db = table.update_item(
                         TableName=dynamo_name,
                         Key={'job_id': job_id},
@@ -92,16 +87,5 @@ while True:
             shutil.rmtree("output")
 
     print("done!\n\n")
-
-
-
-
-# upload file to glacier using boto3
-
-# add a column to dynamodb table with glacier ID
-
-# update dynamodb table with new column for the job id
-
-
 
 ### EOF

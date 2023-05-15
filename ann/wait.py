@@ -11,11 +11,17 @@ user_id = sys.argv[1]
 job_id = sys.argv[2]
 
 time.sleep(10)
-print(f"5 minutes are up. Deleting job : {job_id}")
+print("5 minutes are up.")
 
-arch = {
-    "user_id": user_id,
-    "job_id": job_id
-}
+user_type = [x for x in get_user_profile(user_id, "idalina_accounts") if "free_user" in str(x)]
 
-sns_send_archive(str(json.dumps(arch)))
+if user_type[0] == "free_user":
+    print(f"User is free user. Deleting job results: {job_id}")
+    arch = {
+        "user_id": user_id,
+        "job_id": job_id
+    }
+
+    sns_send_archive(str(json.dumps(arch)))
+else:
+    print("User is a premium user. Persisting job results file.")
