@@ -6,6 +6,7 @@
 __author__ = 'Idalina Sachango'
 
 import os
+import io
 import sys
 import boto3
 import json
@@ -61,11 +62,19 @@ while True:
                         bucket_file_path, 
                         f"output/{file_name}"
                     )
+
                     glacier = boto3.client('glacier')
-                    response = glacier.upload_archive(
-                        vaultName=config["glacier"]["VaultName"],
-                        body=f"output/{file_name}"
-                    )
+                    # Read the file into a seekable file-like object
+                    with open(f"output/{file_name}", 'rb') as file:
+                        file_contents = file.read()
+                        seekable_file = io.BytesIO(file_contents)
+                        
+                        response = glacier.upload_archive(
+                            vaultName=config["glacier"]["VaultName"],
+                            body=seekable_file
+                        )
+                        print("Glacier upload response",response)
+
                     archive_id = response["archiveId"]
                     response_db = table.update_item(
                         TableName=dynamo_name,
