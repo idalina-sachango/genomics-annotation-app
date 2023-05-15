@@ -34,7 +34,7 @@ from sns_helpers import (
     sns_send_results,
     sns_send_thaw,
     sns_send_requests,
-    sns_send_results,
+    sns_send_restore,
     put_into_dynamo
 )
 
@@ -265,18 +265,28 @@ def subscribe():
     # Add code here to initiate restoration of archived user data
     # Make sure you handle files not yet archived!
 
-    s3 = boto3.client('s3')
     user_id = session["primary_identity"]
+
     #query dynamo db
     response = table.query(
       IndexName="user_id_index",
       KeyConditionExpression=Key("user_id").eq(user_id)
     )
+    
   
     job_list = response["Items"]
-    print(job)
+
+    for j in job_list:
+      j["submit_time"] = str(j["submit_time"])
+      j["completion_time"] = str(j["completion_time"])
+
+    message = {
+      "user_id": user_id,
+      "job_list": job_list
+    }
 
     # send job list to message queue
+    sns_send_restore(str(json.dumps(message)))
 
     # Display confirmation page
     return render_template('subscribe_confirm.html') 
