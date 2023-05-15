@@ -274,11 +274,13 @@ def sns_send(message):
     client = boto3.client('sns', region_name="us-east-1")
     print(message)
     response = client.publish(
-        TopicArn="arn:aws:sns:us-east-1:659248683008:idalina_job_requests",
+        TopicArn=app.config["AWS_SNS_JOB_REQUEST_TOPIC"],
         Message=message,
-        Subject="test-subject"
+        Subject="subject"
     )
+    print("\n")
     print(response)
+    print("\n")
 
 def generate_unique_id():
     """

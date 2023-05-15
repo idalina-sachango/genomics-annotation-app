@@ -19,6 +19,20 @@ dynamo = boto3.resource('dynamodb', region_name = region_name)
 table = dynamo.Table(db_table_name)
 
 ### Helpers
+def sns_send_archive(message):
+    """
+    Send message to SNS to deliver to queue.
+    """
+    client = boto3.client('sns', region_name=region_name)
+    response = client.publish(
+        TopicArn=requests_topic,
+        Message=message,
+        Subject="request"
+    )
+    print("\n")
+    print(response)
+    print("\n")
+
 def sns_send_requests(message):
     """
     Send message to SNS to deliver to queue.
