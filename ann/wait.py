@@ -10,7 +10,7 @@ from sns_helpers import (
 user_id = sys.argv[1]
 job_id = sys.argv[2]
 
-time.sleep(300)
+time.sleep(10)
 print(f"5 minutes are up. Deleting job : {job_id}")
 
 arch = {
