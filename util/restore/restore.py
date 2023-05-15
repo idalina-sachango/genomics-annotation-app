@@ -13,6 +13,9 @@ import json
 # Import utility helpers
 sys.path.insert(1, os.path.realpath(os.path.pardir))
 import helpers
+from sns_helpers import (
+    sns_send_thaw
+)
 
 # Get configuration
 from configparser import ConfigParser
@@ -34,7 +37,7 @@ queue = boto3.resource("sqs", region_name=region_name).Queue(url)
 while True:
     messages = queue.receive_messages(WaitTimeSeconds=10)
     for message in messages:
-        try: 
+        try:
             body = json.loads(message.body)
             # extract message
             messge = json.loads(body["Message"])
@@ -45,21 +48,44 @@ while True:
             job_list = messge["job_list"]
 
             glacier = boto3.client('glacier')
+         
             for job in job_list:
                 print("looped glacier once")
-                print(job["results_file_archive_id"])
-                print(config["glacier"]["VaultName"])
                 if "results_file_archive_id" in job.keys():
-                    response = glacier.initiate_job(
-                        vaultName = config["glacier"]["VaultName"],
-                        jobParameters={
-                            "Tier": "Expedited",
-                            "Type": "archive-retrieval",
-                            "ArchiveId": str(job["results_file_archive_id"])
-                        },
-                    )
-
-                    print("RESPONSE",response)
+                    try:
+                        # try expedited
+                        response = glacier.initiate_job(
+                            vaultName = config["glacier"]["VaultName"],
+                            jobParameters={
+                                "Tier": "Expedited",
+                                "Type": "archive-retrieval",
+                                "ArchiveId": str(job["results_file_archive_id"])
+                            },
+                        )
+                        # send to thaw message queue
+                        job_id = response["jobId"]
+                        message = {
+                            "job_id": job_id
+                        }
+                        
+                        sns_send_thaw(str(json.dumps(message)))
+                    except:
+                        # try standard if expedited didnt work
+                        response = glacier.initiate_job(
+                            vaultName = config["glacier"]["VaultName"],
+                            jobParameters={
+                                "Tier": "Standard",
+                                "Type": "archive-retrieval",
+                                "ArchiveId": str(job["results_file_archive_id"])
+                            },
+                        )
+                        # send to thaw message queue
+                        job_id = response["jobId"]
+                        message = {
+                            "job_id": job_id
+                        }
+                        
+                        sns_send_thaw(str(json.dumps(message)))
         except:
             raise
         finally:
