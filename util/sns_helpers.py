@@ -85,10 +85,10 @@ def sns_send_results(message):
     response = client.publish(
         TopicArn=str(results_topic),
         Message=message,
-        Subject="result"
+        Subject="request"
     )
     print("\n")
-    print(response)
+    print("Results Queue Response : ",response)
     print("\n")
 
 def generate_unique_id():
