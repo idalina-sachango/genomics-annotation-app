@@ -119,10 +119,6 @@ if __name__ == '__main__':
 
             # send email
             email = [x for x in get_user_profile(user_id, "idalina_accounts") if "@uchicago.edu" in str(x)]
-            completion_message = {
-                "email": email[0],
-                "message": "Result and log file uploaded to S3 and database updated."
-            }
-            sns_send_results(str(json.dumps(completion_message)))
+            sns_send_results(email[0])
     else:
         print("A valid .vcf file must be provided as input to this program.")
