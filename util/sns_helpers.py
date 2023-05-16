@@ -45,7 +45,7 @@ def sns_send_restore(message):
         Subject="request"
     )
     print("\n")
-    print(response)
+    print("RESTORE SQS RESPONSE",response)
     print("\n")
 
 
