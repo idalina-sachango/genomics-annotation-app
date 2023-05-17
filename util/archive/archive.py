@@ -43,40 +43,35 @@ while True:
             body = json.loads(message.body)
             # extract message
             messge = json.loads(body["Message"])
-            print("INCOMING MESSAGE\n\n",messge,"\n")
             # extract job id
             job_id = messge["job_id"]
             # extract user id
             user_id = messge['user_id']
-
             bucket_file_path = prefix + user_id
-
             s3 = boto3.client('s3')
+            # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/list_objects.html
             bucket = s3.list_objects(Bucket= results_bucket_name, Prefix=prefix)['Contents']
             for s3_object in bucket: 
                 bucket_file_path = s3_object['Key']
                 if "annot.vcf" in bucket_file_path:
                     file_name = s3_object['Key'].split("/")[2]
+                    # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-example-download-file.html
                     s3.download_file(
                         results_bucket_name, 
                         bucket_file_path, 
                         f"output/{file_name}"
                     )
-
                     glacier = boto3.client('glacier')
                     # Read the file into a seekable file-like object
                     with open(f"output/{file_name}", 'rb') as file:
                         file_contents = file.read()
                         seekable_file = io.BytesIO(file_contents)
-                        
+                        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/glacier/client/upload_archive.html
                         response = glacier.upload_archive(
                             vaultName=config["glacier"]["VaultName"],
                             body=seekable_file
                         )
-                        print("Glacier upload response", response)
-
                     archive_id = response["archiveId"]
-
                     response_db = table.update_item(
                         TableName=dynamo_name,
                         Key={'job_id': job_id},
@@ -86,6 +81,7 @@ while True:
                         },
                         ReturnValues='UPDATED_NEW'
                     )
+                    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/delete_object.html
                     s3.delete_object(
                         Bucket=results_bucket_name,
                         Key=bucket_file_path

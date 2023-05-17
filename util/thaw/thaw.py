@@ -29,7 +29,6 @@ dynamo = boto3.resource('dynamodb', region_name = region_name)
 table = dynamo.Table(dynamo_name)
 
 # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/glacier/client/initiate_job.html
-
 # Add utility code here
 url = config["aws"]["ThawURL"]
 queue = boto3.resource("sqs", region_name=region_name).Queue(url)
@@ -39,23 +38,17 @@ while True:
         body = json.loads(message.body)
         # extract message
         messge = json.loads(body["Message"])
-        print("INCOMING MESSAGE\n\n",messge,"\n")
-
         job_id = messge["job_id"]
-
         glacier = boto3.client('glacier')
-
         status = client.describe_job(
             vaultName=config["glacier"]["VaultName"],
             jobId=job_id
         )
-
         if status["Completed"]:
             response = client.get_job_output(
                 vaultName=config["glacier"]["VaultName"],
                 jobId=job_id
             )
-
             file_body = response["body"]
 
             

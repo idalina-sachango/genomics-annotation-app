@@ -22,7 +22,9 @@ table = dynamo.Table(db_table_name)
 ### Helpers
 def sns_send_thaw(message):
     """
-    Send message to SNS to deliver to queue.
+    Send message to SNS to deliver to thaw queue.
+    https://boto3.amazonaws.com/v1/documentation/api/latest/ \
+    reference/services/sns/client/publish.html
     """
     client = boto3.client('sns', region_name=region_name)
     response = client.publish(
@@ -36,7 +38,9 @@ def sns_send_thaw(message):
 
 def sns_send_restore(message):
     """
-    Send message to SNS to deliver to queue.
+    Send message to SNS to deliver to restore queue.
+    https://boto3.amazonaws.com/v1/documentation/api/latest/ \
+    reference/services/sns/client/publish.html
     """
     client = boto3.client('sns', region_name=region_name)
     response = client.publish(
@@ -51,7 +55,9 @@ def sns_send_restore(message):
 
 def sns_send_archive(message):
     """
-    Send message to SNS to deliver to queue.
+    Send message to SNS to deliver to archive queue.
+    https://boto3.amazonaws.com/v1/documentation/api/latest/ \
+    reference/services/sns/client/publish.html
     """
     client = boto3.client('sns', region_name=region_name)
     response = client.publish(
@@ -65,7 +71,9 @@ def sns_send_archive(message):
 
 def sns_send_requests(message):
     """
-    Send message to SNS to deliver to queue.
+    Send message to SNS to deliver to requests queue.
+    https://boto3.amazonaws.com/v1/documentation/api/latest/ \
+    reference/services/sns/client/publish.html
     """
     client = boto3.client('sns', region_name=region_name)
     response = client.publish(
@@ -79,7 +87,9 @@ def sns_send_requests(message):
 
 def sns_send_results(message):
     """
-    Send message to SNS to deliver to queue.
+    Send message to SNS to deliver to results queue.
+    https://boto3.amazonaws.com/v1/documentation/api/latest/ \
+    reference/services/sns/client/publish.html
     """
     client = boto3.client('sns', region_name=region_name)
     response = client.publish(
