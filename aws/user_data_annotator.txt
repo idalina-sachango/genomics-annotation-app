@@ -1,0 +1,16 @@
+#!/bin/bash
+
+source /home/ec2-user/mpcs-cc/bin/activate
+
+aws s3 cp s3://mpcs-cc-students/idalina/gas.zip /home/ec2-user/gas.zip
+unzip /home/ec2-user/gas.zip -d /home/ec2-user/mpcs-cc
+
+aws s3 cp s3://mpcs-cc-students/idalina/anntools.zip /home/ec2-user/anntools.zip
+unzip /home/ec2-user/anntools.zip -d /home/ec2-user/mpcs-cc
+
+chown -R ec2-user:ec2-user /home/ec2-user/mpcs-cc/anntools
+chown -R ec2-user:ec2-user /home/ec2-user/mpcs-cc/gas
+
+chmod 755 /home/ec2-user/mpcs-cc/gas/ann/run_ann.sh
+
+sudo -u ec2-user /home/ec2-user/mpcs-cc/gas/ann/run_ann.sh &
