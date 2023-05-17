@@ -1,3 +1,8 @@
+"""
+Module to time 5 minutes from a job's completion.
+Decides if job needs to be archived by looking
+at user status.
+"""
 import time
 import json
 import sys
