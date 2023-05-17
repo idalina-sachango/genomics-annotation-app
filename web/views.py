@@ -72,7 +72,6 @@ def annotate():
   # policy 
   p_dict = {
     "fields": {
-      # "expiration": app.config['AWS_SIGNED_REQUEST_EXPIRATION'], 
       "success_action_redirect": redirect_url,
       "x-amz-server-side-encryption": encryption,
       "acl": acl
@@ -81,13 +80,14 @@ def annotate():
     "conditions": [
       {"acl": acl},
       {"success_action_redirect": redirect_url},
-      # ["starts-with", "$key", "idalina/"],
       ["starts-with", "$success_action_redirect", redirect_url],
       {"x-amz-server-side-encryption": encryption},
     ]
   }
   try:
     # generate signed POST request
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/generate_presigned_post.html
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-presigned-urls.html
     response = s3.generate_presigned_post(
       Bucket = bucket,
       Key = key,
@@ -153,7 +153,6 @@ def create_annotation_job_request():
 @authenticated
 def annotations_list():
   # Get list of annotations to display
-  #Make Initial Query
   user_id = session['primary_identity']
   response = table.query(
     IndexName="user_id_index",
@@ -192,6 +191,7 @@ def annotation_details(id):
   if ("completion_time" in job.keys()) and ("results_file_archive_id" not in job.keys()):
     # generate signed POST request
     try:
+      # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-presigned-urls.html
       url = s3.generate_presigned_url(
         'get_object',
         Params={
@@ -226,6 +226,7 @@ def annotation_log(id):
   if "completion_time" in job.keys():
     # generate signed POST request
     try:
+      # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-presigned-urls.html
       url = s3.generate_presigned_url(
         'get_object',
         Params={
