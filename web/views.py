@@ -279,7 +279,8 @@ def subscribe():
 
     for j in job_list:
       j["submit_time"] = str(j["submit_time"])
-      j["completion_time"] = str(j["completion_time"])
+      if "completion_time" in j.keys():
+        j["completion_time"] = str(j["completion_time"])
 
     message = {
       "user_id": user_id,
