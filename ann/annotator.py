@@ -31,12 +31,9 @@ table = dynamo.Table(db_table_name)
 if "output" not in os.listdir("./"):
     os.mkdir("./output")
 
-
 ## Annotator code
-
 url = request_URL
 queue = boto3.resource("sqs", region_name=region_name).Queue(url)
-
 while True:
     messages = queue.receive_messages(WaitTimeSeconds=10)
     for message in messages:
@@ -45,7 +42,6 @@ while True:
             body = json.loads(message.body)
             # extract message
             messge = json.loads(body["Message"])
-            print("INCOMING MESSAGE\n\n",messge,"\n")
             # extract job id
             job_id = messge["job_id"]
             # extract user id
@@ -57,17 +53,16 @@ while True:
             # set pucket full file path
             bucket_file_path = f"{prefix}/{file_param}"
             file_name = messge["input_file_name"]
-
             # write output to jobs own directory
             os.makedirs(f"output/{user_id}/{job_id}")
-  
+            # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-example-download-file.html
             s3.download_file(
                 inputs_bucket,
                 bucket_file_path,
                 f"output/{user_id}/{job_id}/{file_param}"
             )
-
             # write to dynamodb and spawn annotator process
+            # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb/client/update_item.html
             try:
                 # update dynamoDB job status to running
                 response = table.update_item(
