@@ -257,7 +257,6 @@ def subscribe():
       identity_id=session['primary_identity'],
       role="premium_user"
     )
-    print("IN POST")
 
     # Update role in the session
     session['role'] = "premium_user"
@@ -273,18 +272,19 @@ def subscribe():
       IndexName="user_id_index",
       KeyConditionExpression=Key("user_id").eq(user_id)
     )
-    
-  
+
     job_list = response["Items"]
 
+    archived_jobs = []
     for j in job_list:
-      j["submit_time"] = str(j["submit_time"])
       if "completion_time" in j.keys():
+        j["submit_time"] = str(j["submit_time"])
         j["completion_time"] = str(j["completion_time"])
+        archived_jobs.append(j)
 
     message = {
       "user_id": user_id,
-      "job_list": job_list
+      "job_list": archived_jobs
     }
 
     # send job list to message queue
