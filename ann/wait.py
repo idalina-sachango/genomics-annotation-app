@@ -11,7 +11,7 @@ from sns_helpers import (
 user_id = sys.argv[1]
 job_id = sys.argv[2]
 
-time.sleep(10)
+time.sleep(300)
 print("5 minutes are up.")
 
 user_type = [x for x in get_user_profile(user_id, "idalina_accounts") \
