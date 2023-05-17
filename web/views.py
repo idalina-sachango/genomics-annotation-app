@@ -186,9 +186,10 @@ def annotation_details(id):
   start_date_obj = datetime.strptime(str(job["submit_time"]), dt_time_format)
   job["submit_time"] = str(start_date_obj)
 
-  if ("completion_time" in job.keys()) and ("results_file_archive_id" not in job.keys()):
+  if "completion_time" in job.keys():
     end_date_obj = datetime.strptime(str(job["completion_time"]), dt_time_format)
     job["completion_time"] = str(end_date_obj)
+  if ("completion_time" in job.keys()) and ("results_file_archive_id" not in job.keys()):
     # generate signed POST request
     try:
       url = s3.generate_presigned_url(
@@ -201,7 +202,7 @@ def annotation_details(id):
       job["result_file_url"] = url
     except ClientError as e:
       logging.error(e)
-  elif "results_file_archive_id" in job.keys():
+  elif ("results_file_archive_id" in job.keys()) and (session.get('role') == "free_user"):
     return render_template('annotation_details.html', annotation=job, free_access_expired=True)
   return render_template('annotation_details.html', annotation=job)
 
