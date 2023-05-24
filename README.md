@@ -19,7 +19,7 @@ __Changes__:
 
 __Archiving Process__:
 
-* I archive free users files after 5 minutes by using `subporcess.Popen()` with a python file `wait.py`. This script sleeps for 5 minutes. After it is done sleeping,it checks the user type to see whether to archive files or persist them. If the user is a free user, it sends a delete message to my archive queue. The util instance is listening for delete messages from my archive queue in one tmux session and begins the process of deleting result files from s3 once its received a message. 
+* I archive free users files after 5 minutes by using `subprocess.Popen()` with a python script `wait.py`. This script sleeps for 5 minutes. After it is done sleeping, it checks the user type to see whether to archive files or persist them. If the user is a free user, it sends a delete message to my archive queue. The util instance is listening for delete messages from my archive queue in one tmux session and begins the process of deleting result files from s3 once its received a message. 
 
 __Restoring Process__:
 
@@ -27,7 +27,7 @@ __Restoring Process__:
 
 __Thaw Process__:
 
-* Messages coming into the thaw queue are read and I call `Glacier.describe_job` to check on the status of the previous restore job. Once the job is complete, I get the name of the file by querying the Dynao DB table for the job details, I grab the output of the archive retreival by calling `Glacier.get_job_output`, and finally, I put the file into the correct S3 bucket via `S3.put_object`, specifying the file body, the bucket name, and the key.
+* Messages coming into the thaw queue are read and I call `Glacier.describe_job` to check on the status of the previous restore job. Once the job is complete, I get the name of the file by querying the Dynamo DB table for the job details and grabbing "s3_key_result_file", I grab the output of the archive retreival by calling `Glacier.get_job_output`, and finally, I put the file into the correct S3 bucket via `S3.put_object` - specifying the file body, the bucket name, and the key when doing so.
 
 __Issues Encountered__:
 
