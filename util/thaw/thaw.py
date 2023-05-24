@@ -12,6 +12,7 @@ import sys
 import boto3
 import json
 from boto3.dynamodb.conditions import Key
+from botocore.exceptions import ClientError
 
 # Import utility helpers
 sys.path.insert(1, os.path.realpath(os.path.pardir))
@@ -42,30 +43,38 @@ while True:
         body = json.loads(message.body)
         # extract message
         messge = json.loads(body["Message"])
-        glacier = boto3.client('glacier')
-        if "Completed" in messge.keys() and messge["Completed"]:
-            try:
-                status = glacier.describe_job(
-                    vaultName=config["glacier"]["VaultName"],
-                    jobId=messge["JobId"]
+        if "job_id" in messge.keys():
+            user_id = messge["user_id"]
+
+            glacier = boto3.client('glacier')
+            status = glacier.describe_job(
+                vaultName=config["glacier"]["VaultName"],
+                jobId=messge["job_id"]
+            )
+
+            
+            if status["Completed"]:
+                quer = response = table.query(
+                    KeyConditionExpression=Key("job_id").eq(messge["dynamo_db"])
                 )
-                if status["Completed"]:
-                    response = glacier.get_job_output(
+                try:
+                    response_output = glacier.get_job_output(
                         vaultName=config["glacier"]["VaultName"],
-                        jobId=messge["JobId"]
+                        jobId=messge["job_id"]
                     )
-                    file_body = response["body"]
-                    print(file_body.read())
-                    print(json.loads(file_body.read()))
-                    file_param = file_body.read()
-                    prefix = config["s3"]["PrefixS3"]
-                    result_file_name = response["Items"][0]["s3_key_result_file"]
+                    file_body = response_output["body"]
+                    prefix = config["s3"]["PrefixS3"] + user_id
+                    result_file_name = quer["Items"][0]["s3_key_result_file"]
+
                     s3 = boto3.client('s3')
-                    s3.upload_fileobj(file_param, results_bucket, f"{prefix}/{result_file_name}")
-            except Exception as err:
-                print("Job id not in glacier")
-                message.delete()
-        
+                    response = s3.put_object(
+                        Body=file_body.read(),
+                        Bucket=results_bucket, 
+                        Key=f"{prefix}/{result_file_name}"
+                    )
+                    message.delete()
+                except ClientError as err:
+                    print(err) 
     print("done!\n\n")         
 
 ### EOF
