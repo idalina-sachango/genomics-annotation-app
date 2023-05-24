@@ -9,6 +9,8 @@ __author__ = 'Vas Vasiliadis <vas@uchicago.edu>'
 
 import os
 import sys
+import boto3
+import json
 
 # Import utility helpers
 sys.path.insert(1, os.path.realpath(os.path.pardir))
@@ -39,24 +41,29 @@ while True:
         body = json.loads(message.body)
         # extract message
         messge = json.loads(body["Message"])
-        print("INCOMING MESSAGE\n\n",messge,"\n")
+        if "JobId" in messge.keys():
+            job_id = messge["JobId"]
+            glacier = boto3.client('glacier')
+            try:
+                # status = glacier.describe_job(
+                #     vaultName=config["glacier"]["VaultName"],
+                #     jobId=job_id
+                # )
+                # if status["Completed"]:
+                #     print("Completed!")
+                response = glacier.get_job_output(
+                    vaultName=config["glacier"]["VaultName"],
+                    jobId=job_id
+                )
+                file_body = response["body"]
+                print(file_body)
+                print(file_body.read())
+            except:
+                print("Job not in glacier vault. Deleting message")
+                # message.delete()
+    print("done!\n\n")
 
-        job_id = messge["job_id"]
-
-        glacier = boto3.client('glacier')
-
-        status = client.describe_job(
-            vaultName=config["glacier"]["VaultName"],
-            jobId=job_id
-        )
-
-        if status["Completed"]:
-            response = client.get_job_output(
-                vaultName=config["glacier"]["VaultName"],
-                jobId=job_id
-            )
-
-            file_body = response["body"]
+        
 
             
 
