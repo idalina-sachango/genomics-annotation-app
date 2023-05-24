@@ -72,7 +72,6 @@ def annotate():
   # policy 
   p_dict = {
     "fields": {
-      # "expiration": app.config['AWS_SIGNED_REQUEST_EXPIRATION'], 
       "success_action_redirect": redirect_url,
       "x-amz-server-side-encryption": encryption,
       "acl": acl
@@ -81,13 +80,14 @@ def annotate():
     "conditions": [
       {"acl": acl},
       {"success_action_redirect": redirect_url},
-      # ["starts-with", "$key", "idalina/"],
       ["starts-with", "$success_action_redirect", redirect_url],
       {"x-amz-server-side-encryption": encryption},
     ]
   }
   try:
     # generate signed POST request
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/generate_presigned_post.html
+    # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-presigned-urls.html
     response = s3.generate_presigned_post(
       Bucket = bucket,
       Key = key,
@@ -153,7 +153,6 @@ def create_annotation_job_request():
 @authenticated
 def annotations_list():
   # Get list of annotations to display
-  #Make Initial Query
   user_id = session['primary_identity']
   response = table.query(
     IndexName="user_id_index",
@@ -186,11 +185,13 @@ def annotation_details(id):
   start_date_obj = datetime.strptime(str(job["submit_time"]), dt_time_format)
   job["submit_time"] = str(start_date_obj)
 
-  if ("completion_time" in job.keys()) and ("results_file_archive_id" not in job.keys()):
+  if "completion_time" in job.keys():
     end_date_obj = datetime.strptime(str(job["completion_time"]), dt_time_format)
     job["completion_time"] = str(end_date_obj)
+  if ("completion_time" in job.keys()) and ("results_file_archive_id" not in job.keys()):
     # generate signed POST request
     try:
+      # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-presigned-urls.html
       url = s3.generate_presigned_url(
         'get_object',
         Params={
@@ -201,7 +202,7 @@ def annotation_details(id):
       job["result_file_url"] = url
     except ClientError as e:
       logging.error(e)
-  elif "results_file_archive_id" in job.keys():
+  elif ("results_file_archive_id" in job.keys()) and (session.get('role') == "free_user"):
     return render_template('annotation_details.html', annotation=job, free_access_expired=True)
   return render_template('annotation_details.html', annotation=job)
 
@@ -225,6 +226,7 @@ def annotation_log(id):
   if "completion_time" in job.keys():
     # generate signed POST request
     try:
+      # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-presigned-urls.html
       url = s3.generate_presigned_url(
         'get_object',
         Params={
@@ -256,7 +258,6 @@ def subscribe():
       identity_id=session['primary_identity'],
       role="premium_user"
     )
-    print("IN POST")
 
     # Update role in the session
     session['role'] = "premium_user"
@@ -272,17 +273,19 @@ def subscribe():
       IndexName="user_id_index",
       KeyConditionExpression=Key("user_id").eq(user_id)
     )
-    
-  
+
     job_list = response["Items"]
 
+    archived_jobs = []
     for j in job_list:
-      j["submit_time"] = str(j["submit_time"])
-      j["completion_time"] = str(j["completion_time"])
+      if "completion_time" in j.keys():
+        j["submit_time"] = str(j["submit_time"])
+        j["completion_time"] = str(j["completion_time"])
+        archived_jobs.append(j)
 
     message = {
       "user_id": user_id,
-      "job_list": job_list
+      "job_list": archived_jobs
     }
 
     # send job list to message queue

@@ -89,20 +89,19 @@ if __name__ == '__main__':
             s3 = boto3.client('s3')
             # extract prefix
             prefix = prefixs3 + user_id
-
+            # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-uploading-files.html
             with open(log_file, "rb") as f:
                 s3.upload_fileobj(f, results_bucket, f"{prefix}/{file_name}.count.log")
             with open(result_file_path, "rb") as f:
                 s3.upload_fileobj(f, results_bucket, f"{prefix}/{result_file_name}")
-
+            # Remove files
             shutil.rmtree("output")
-
-            # add the name of the S3 key for the results file
             # Adds the name of the S3 key for the log file
             # Adds the completion time (use the current system time)
             # Updates the “job_status” key to “COMPLETED”
             now = datetime.now()
             dt_string = now.strftime("%d%m%Y%H%M%S")
+            # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb/client/update_item.html
             r2 = table.update_item(
                 Key={'job_id': str(job_id)},
                 UpdateExpression="set job_status=:r, completion_time=:p, \
@@ -113,10 +112,8 @@ if __name__ == '__main__':
                     ':k': f"{file_name}.count.log",
                     ':j': result_file_name},
                 ReturnValues="UPDATED_NEW")
-
             # send to archive sns
             subprocess.Popen(["python3", "wait.py", user_id, job_id])
-
             # send email
             email = [x for x in get_user_profile(user_id, "idalina_accounts") if "@uchicago.edu" in str(x)]
             sns_send_results(email[0])

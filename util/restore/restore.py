@@ -29,7 +29,6 @@ dynamo = boto3.resource('dynamodb', region_name = region_name)
 table = dynamo.Table(dynamo_name)
 
 # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/glacier/client/initiate_job.html
-
 # Add utility code here
 url = config["aws"]["RestoreURL"]
 queue = boto3.resource("sqs", region_name=region_name).Queue(url)
@@ -41,14 +40,11 @@ while True:
             body = json.loads(message.body)
             # extract message
             messge = json.loads(body["Message"])
-            print("INCOMING MESSAGE\n\n",messge,"\n")
             # extract user id
             user_id = messge['user_id']
             # extract job list
             job_list = messge["job_list"]
-
             glacier = boto3.client('glacier')
-         
             for job in job_list:
                 if "results_file_archive_id" in job.keys():
                     print("archive id=", job["results_file_archive_id"])
