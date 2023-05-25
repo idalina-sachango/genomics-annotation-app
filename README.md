@@ -23,7 +23,7 @@ __Archiving Process__:
 
 __Restoring Process__:
 
-* If in the endpoint for subscribing in views.py, a user upgrades to a premium user, a message gets sent to the restore queue with the current users job list. In util/restore.py, I begin the process of archive retrieval by looping thorugh the job list and finding all jobs marked with `results_file_archive_id` defined. For each job that meets this criteria, I initiate a retrieval job. I use a try/except for expedited retrieval. If I cannot access expedited retrieval, I inititate standard retreival. After this is started, I finish by sending message to my thaw message queue with the Glacier job id, user id, and Dynamo DB job id to begin the "thaw" process. Then I delete the message. 
+* If in the subscribing endpoint in views.py, a user upgrades to a premium user, a message gets sent to the restore queue with the current users job list. In util/restore.py, I begin the process of archive retrieval by looping thorugh the job list and finding all jobs marked with `results_file_archive_id` defined. For each job that meets this criteria, I initiate a retrieval job. I use a try/except for expedited retrieval. If I cannot access expedited retrieval, I inititate standard retreival. After this is started, I finish by sending message to my thaw message queue with the Glacier job id, user id, and Dynamo DB job id to begin the "thaw" process. Then I delete the message. 
 
 __Thaw Process__:
 
