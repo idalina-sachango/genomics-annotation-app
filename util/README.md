@@ -3,7 +3,7 @@ This directory should contain the following utility-related files:
 * `util_config.py` - Common configuration options for all utilities
 
 __Added__:
-* `sns_helper.py` - Helper functions for publishing to SNS topic
+* `sns_helpers.py` - Helper functions for publishing to SNS topic
 
 Each utility should be in its own sub-directory, along with its configuration file, as follows:
 
