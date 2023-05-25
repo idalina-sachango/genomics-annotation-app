@@ -13,9 +13,9 @@ __Changes__:
 
 2. Changed file path of output to `user/job_id/file_name`. This is still a tentative edit. 
 
-3. Added helper functions for sending messages to SNS topics in the `util/` folder. These are used for the annotator functions, `run.py` and `annotator.py` and also for `views.py`
+3. Added helper functions for sending messages to SNS topics in the `/util` folder. These are used for the annotator functions, `run.py` and `annotator.py` and also for `views.py`
 
-4. Added `wait.py` script in the `ann` folder  to time 5 minutes from the end of a job and archive if user is still a free user. 
+4. Added `wait.py` script in the `/ann` folder  to time 5 minutes from the end of a job and archive if user is still a free user. 
 
 __Archiving Process__:
 
