@@ -11,7 +11,7 @@ Directory contents are as follows:
 __Changes__:
 1. `annotatation_details.html` `{{ annotation['complete_time'] }}` got changed to `{{ annotation['completion_time'] }}`
 
-2. Changed file path of output to `user/job_id/file_name`. This is still a tentative edit. 
+2. Changed file path of output to `user/job_id/file_name`. 
 
 3. Added helper functions for sending messages to SNS topics in the `/util` folder. These are used for the annotator functions, `run.py` and `annotator.py` and also for `views.py`
 
