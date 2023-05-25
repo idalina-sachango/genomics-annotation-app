@@ -2,6 +2,9 @@ This directory should contain the following utility-related files:
 * `helpers.py` - Miscellaneous helper functions
 * `util_config.py` - Common configuration options for all utilities
 
+Added
+* `sns_helper.py` - Helper functions for publishing to SNS topic
+
 Each utility should be in its own sub-directory, along with its configuration file, as follows:
 
 /archive
