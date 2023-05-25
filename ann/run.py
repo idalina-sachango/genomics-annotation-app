@@ -95,7 +95,7 @@ if __name__ == '__main__':
             with open(result_file_path, "rb") as f:
                 s3.upload_fileobj(f, results_bucket, f"{prefix}/{result_file_name}")
             # Remove files
-            shutil.rmtree("output")
+            shutil.rmtree(f"output/{user_id}/{job_id}/")
             # Adds the name of the S3 key for the log file
             # Adds the completion time (use the current system time)
             # Updates the “job_status” key to “COMPLETED”
