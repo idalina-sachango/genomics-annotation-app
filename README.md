@@ -19,7 +19,7 @@ __Changes__:
 
 __Archiving Process__:
 
-* I archive free users files after 5 minutes by using `subprocess.Popen()` with a python script `wait.py`. This process is started in `run.py` in the annotator. This script sleeps for 5 minutes. After it is done sleeping, it checks the user type to see whether to archive files or persist them. If the user is a free user, it sends a delete message to my archive queue. The util instance is listening for delete messages from my archive queue in one tmux session and begins the process of deleting result files from s3 once its received a message. 
+* I archive free users files after 5 minutes by using `subprocess.Popen()` with a python script `wait.py`. This process is started in `run.py` in the annotator. This script sleeps for 5 minutes. After it is done sleeping, it checks the user type to see whether to archive files or persist them. If the user is a free user, it sends a delete message to my archive queue. The util instance is listening for delete messages from my archive queue in one tmux session and begins the process of archiving the result file from S3 and deleting result files from S3 once its succesfully archived the file. 
 
 __Restoring Process__:
 
