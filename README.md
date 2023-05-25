@@ -32,5 +32,5 @@ __Thaw Process__:
 
 __Issue__:
 
-* Annotation details page does not display "restoring" message when user switches from free to premium for result file. I tried editing the HTML after I'd launched my autoscaler, but the HTML changes didn't show and I ran out of time. 
+* Annotation details page does not display "restoring" message when user switches from free to premium for result file. I tried editing the HTML after I'd launched my autoscaler, but the HTML changes didn't show and I ran out of time. The file is re-uploaded to S3 after 4-5 hours after standard retrieval, though. Code for this process is in `util/`.
 
