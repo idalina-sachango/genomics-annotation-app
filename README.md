@@ -29,8 +29,3 @@ __Thaw Process__:
 
 * Messages coming into the thaw queue are read and I call `Glacier.describe_job` to check on the status of the previous restore job. Once the job is complete, I get the name of the file by querying the Dynamo DB table for the job details and grabbing "s3_key_result_file", I grab the output of the archive retreival by calling `Glacier.get_job_output`, and finally, I put the file into the correct S3 bucket via `S3.put_object` - specifying the file body, the bucket name, and the key when doing so.
 
-__Issues Encountered__:
-
-* Queueing - On my app, sending multiple things into a queue within milliseconds of each other causes some processes to seemingly be dropped. I noticed this when trying to run several annotation jobs within a very short time frame. Certain jobs would start running and never move into completed while the jobs that came after them would. This was also true for a subprocesses I ran in the annotator to wait and then archive files. Some of those 'jobs' were dropped within this time frame as well even though the annotator run process is coupled with this wait process, the job was marked as completed, and it had been longer than 5 minutes. If I had more time, I would figure out what is causing these . 
-
-
